@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4f2ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Rig Build">
+<title>Rig Build Sheet</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+  :root{ --sans:'Hanken Grotesk',system-ui,-apple-system,sans-serif; --serif:'Fraunces',Georgia,serif; --mono:'JetBrains Mono',ui-monospace,monospace; }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{ margin:0; min-height:100vh; background:#f4f2ec; font-family:var(--sans); color:#1c1e24; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; }
+  .wrap{ max-width:620px; margin:0 auto; padding:0 16px calc(64px + env(safe-area-inset-bottom)); }
+
+  /* header */
+  .header{ position:sticky; top:0; z-index:10; background:rgba(244,242,236,.94); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); margin:0 -16px; padding:calc(22px + env(safe-area-inset-top)) 16px 0; }
+  .head-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+  .app-title{ font-family:var(--serif); font-size:31px; font-weight:600; letter-spacing:-.02em; line-height:1; }
+  .app-sub{ font-family:var(--mono); font-size:12px; color:#8a8d84; margin-top:7px; letter-spacing:.2px; }
+  .reset-btn{ background:#fff; border:1px solid #e6e2d8; border-radius:9px; color:#8a8d84; padding:9px; cursor:pointer; display:flex; flex:0 0 auto; }
+  .prog{ margin:16px 0 13px; }
+  .prog-row{ display:flex; justify-content:space-between; font-size:12.5px; color:#8a8d84; margin-bottom:6px; font-family:var(--mono); }
+  #progPct{ font-weight:600; }
+  .prog-track{ height:6px; border-radius:9px; background:#e4e0d6; overflow:hidden; }
+  .prog-fill{ height:100%; width:0; background:#1f9d5b; border-radius:9px; transition:width .35s ease; }
+  .tabs{ display:flex; gap:5px; padding:4px; background:#e8e5db; border-radius:11px; margin-bottom:14px; }
+  .tab{ flex:1; display:flex; align-items:center; justify-content:center; gap:7px; padding:9px 0; border-radius:8px; cursor:pointer; font-size:14.5px; font-weight:600; border:none; background:transparent; color:#8a8d84; font-family:var(--sans); }
+  .tab.active{ background:#fff; color:#1c1e24; box-shadow:0 1px 3px rgba(40,34,20,.12); }
+  .confirm{ display:none; align-items:center; gap:10px; padding:11px 13px; margin-bottom:14px; border-radius:11px; background:#fdeceb; border:1px solid #f3c9c5; }
+  .confirm.show{ display:flex; }
+  .confirm-text{ flex:1; font-size:14.5px; color:#a23b30; }
+  .btn-yes{ background:#d8483b; border:none; border-radius:8px; color:#fff; font-weight:700; padding:7px 14px; cursor:pointer; font-size:13.5px; font-family:var(--sans); }
+  .btn-no{ background:#fff; border:1px solid #e6c4c0; border-radius:8px; color:#a23b30; padding:7px 14px; cursor:pointer; font-size:13.5px; font-family:var(--sans); }
+
+  .body{ padding-top:18px; animation:up .4s ease; }
+  .fix-hint{ font-size:13.5px; color:#8a8d84; margin-bottom:13px; font-family:var(--mono); }
+  .footer{ text-align:center; font-family:var(--serif); font-style:italic; font-size:14px; color:#b3af9f; margin-top:22px; }
+
+  /* section card */
+  .section{ margin-bottom:11px; border-radius:16px; background:#fff; border:1px solid #ece9e1; box-shadow:0 1px 2px rgba(40,34,20,.04),0 4px 14px rgba(40,34,20,.035); overflow:hidden; transition:box-shadow .25s; }
+  .section.gate{ border:1.5px solid #1f9d5b; }
+  .section.complete{ box-shadow:0 0 0 3px rgba(31,157,91,.1); }
+  .sec-head{ display:flex; align-items:center; gap:13px; padding:16px 18px; cursor:pointer; user-select:none; }
+  .badge{ width:30px; height:30px; border-radius:99px; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:15px; font-family:var(--mono); flex:0 0 auto; background:#f1efe8; color:#8a8d84; }
+  .badge svg{ width:15px; height:15px; }
+  .badge .num{ display:flex; align-items:center; justify-content:center; }
+  .badge .bcheck{ display:none; align-items:center; justify-content:center; }
+  .badge .bcheck svg{ width:16px; height:16px; color:#fff; }
+  .section.gate .badge{ background:#e9f6ee; color:#1f9d5b; }
+  .section.complete .badge{ background:#1f9d5b; color:#fff; }
+  .section.complete .badge .num{ display:none; }
+  .section.complete .badge .bcheck{ display:flex; }
+  .sec-title-wrap{ flex:1; min-width:0; display:flex; align-items:center; gap:9px; }
+  .sec-title{ font-size:18.5px; font-weight:600; color:#1c1e24; letter-spacing:-.015em; font-family:var(--sans); }
+  .section.gate .sec-title{ font-size:20px; font-family:var(--serif); }
+  .opt{ font-size:10.5px; font-weight:700; letter-spacing:.6px; color:#9a9d93; border:1px solid #e2ded4; border-radius:5px; padding:2px 7px; flex:0 0 auto; }
+  .sec-count{ font-family:var(--mono); font-size:13px; color:#a09c90; font-weight:600; }
+  .section.complete .sec-count{ color:#1f9d5b; }
+  .chev{ flex:0 0 auto; display:flex; }
+  .chev svg{ color:#b8b4a8; transition:transform .2s; }
+  .section.open .chev svg, .fixcard.open .chev svg{ transform:rotate(180deg); }
+  .sec-body{ display:none; }
+  .section.open .sec-body{ display:block; animation:rev .22s ease; }
+
+  /* step */
+  .step{ display:flex; gap:13px; padding:15px 18px; border-top:1px solid #f0ede5; cursor:pointer; user-select:none; align-items:flex-start; }
+  .gate-step{ padding:12px 18px; }
+  .check{ width:25px; height:25px; border-radius:99px; flex:0 0 auto; margin-top:1px; border:2px solid #d3cfc4; background:#fff; display:flex; align-items:center; justify-content:center; transition:all .15s; }
+  .gate-step .check{ width:22px; height:22px; }
+  .check svg{ width:15px; height:15px; opacity:0; transition:opacity .15s; color:#fff; }
+  .gate-step .check svg{ width:13px; height:13px; }
+  .step.done .check{ background:#1f9d5b; border-color:#1f9d5b; }
+  .step.done .check svg{ opacity:1; }
+  .step-main{ flex:1; min-width:0; }
+  .step-title{ font-size:16.5px; font-weight:600; color:#1c1e24; line-height:1.4; letter-spacing:-.01em; }
+  .gate-step .step-title{ font-size:15.5px; }
+  .step.done .step-title{ color:#a7a99f; text-decoration:line-through; }
+  .step-detail{ margin-top:4px; }
+  .step.done .step-detail{ display:none; }
+
+  /* detail types */
+  .d-line{ display:flex; gap:10px; align-items:flex-start; margin:7px 0; }
+  .d-line .dot{ width:5px; height:5px; border-radius:9px; background:#c4bfb2; margin-top:9px; flex:0 0 auto; }
+  .d-line span:last-child{ font-size:15.5px; line-height:1.55; color:#3c3f46; }
+  .d-path{ margin:9px 0; padding:10px 13px; background:#f3f1ea; border-radius:9px; font-family:var(--mono); font-size:13.5px; line-height:1.6; color:#4a4e56; word-break:break-word; }
+  .d-kv{ margin:9px 0; border-radius:9px; overflow:hidden; border:1px solid #ebe8df; }
+  .kv-row{ display:flex; justify-content:space-between; align-items:center; gap:12px; padding:9px 13px; background:#fcfbf8; }
+  .kv-row + .kv-row{ border-top:1px solid #efece4; }
+  .kv-k{ font-size:14.5px; color:#6a6e76; }
+  .kv-v{ font-family:var(--mono); font-size:14px; font-weight:600; color:#1c1e24; white-space:nowrap; }
+  .d-led{ margin:9px 0; display:flex; flex-wrap:wrap; gap:8px 20px; }
+  .led-item{ display:inline-flex; align-items:center; gap:8px; font-size:14.5px; color:#3c3f46; }
+  .led-dot{ width:11px; height:11px; border-radius:9px; flex:0 0 auto; }
+  .led-dot.green{ background:#1f9d5b; } .led-dot.red{ background:#d8483b; } .led-dot.amber{ background:#d99a16; }
+  .note{ margin:9px 0; padding:10px 13px; background:#fbf6ec; border-left:3px solid #e0a93f; border-radius:0 9px 9px 0; font-size:14.5px; line-height:1.55; color:#5b4a2b; }
+  .sec-note{ margin:0 18px 6px; }
+
+  /* fixes */
+  .fixcard{ margin-bottom:10px; border-radius:14px; background:#fff; border:1px solid #ece9e1; box-shadow:0 1px 2px rgba(40,34,20,.04); overflow:hidden; }
+  .fix-head{ display:flex; align-items:center; gap:12px; padding:16px 18px; cursor:pointer; user-select:none; }
+  .fix-title{ flex:1; font-size:16.5px; font-weight:600; color:#1c1e24; letter-spacing:-.01em; }
+  .fix-body{ display:none; padding:0 18px 16px; }
+  .fixcard.open .fix-body{ display:block; animation:rev .2s ease; }
+  .fix-step{ display:flex; gap:12px; align-items:flex-start; margin:9px 0; }
+  .fix-num{ width:22px; height:22px; border-radius:99px; background:#f1efe8; color:#7a7d74; font-family:var(--mono); font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; flex:0 0 auto; margin-top:1px; }
+  .fix-text{ font-size:15.5px; line-height:1.55; color:#3c3f46; }
+
+  @keyframes rev{ from{ opacity:0; transform:translateY(-4px); } to{ opacity:1; transform:none; } }
+  @keyframes up{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:none; } }
+  ::-webkit-scrollbar{ width:8px; } ::-webkit-scrollbar-thumb{ background:#dcd8cd; border-radius:9px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <div class="head-top">
+      <div>
+        <div class="app-title">Rig Build Sheet</div>
+        <div class="app-sub">Sony FX3 · RS 5 · Focus Pro · SDR Transmission</div>
+      </div>
+      <button class="reset-btn" id="resetBtn" aria-label="Reset"></button>
+    </div>
+    <div class="prog">
+      <div class="prog-row"><span id="progText">0 of 0 done</span><span id="progPct">0%</span></div>
+      <div class="prog-track"><div class="prog-fill" id="progFill"></div></div>
+    </div>
+    <div class="tabs">
+      <button class="tab active" id="tabSteps" data-tab="steps"></button>
+      <button class="tab" id="tabFixes" data-tab="fixes"></button>
+    </div>
+    <div class="confirm" id="confirmBar">
+      <span class="confirm-text">Clear all checks?</span>
+      <button class="btn-yes" id="resetYes">Reset</button>
+      <button class="btn-no" id="resetNo">Cancel</button>
+    </div>
+  </div>
+
+  <div class="body">
+    <div id="stepsPanel">
+      <div id="sectionList"></div>
+      <div class="footer">This is real. I am real.</div>
+    </div>
+    <div id="fixesPanel" style="display:none">
+      <div class="fix-hint">Tap a problem for the fix.</div>
+      <div id="fixList"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var KEY = "rig-build-sheet";
+
+  // ---- icons ----
+  var ICON = {
+    check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+    chev:  '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>',
+    flag:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>',
+    reset: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>',
+    list:  '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
+    wrench:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.2 2.2-2.4-.6-.6-2.4z"/></svg>'
+  };
+
+  // ---- content builders ----
+  function s(t){ return { k:"s", t:t }; }
+  function p(t){ return { k:"p", t:t }; }
+  function kv(items){ return { k:"kv", items:items }; }
+  function led(items){ return { k:"led", items:items }; }
+  function note(t){ return { k:"note", t:t }; }
+
+  var SECTIONS = [
+    { n:1, title:"Before the shoot", note:"One-time. Do it the night before — not five minutes before rolling.", items:[
+      { id:"a1", t:"Install the apps", d:[
+        s("Phone: DJI Ronin app."),
+        s("Computer: DJI Assistant 2 (Ronin Series) — for the tx/rx firmware."),
+        note("Your video kit is the DJI SDR Transmission — not “DJI Transmission.” Different, incompatible unit.")
+      ]},
+      { id:"a2", t:"Charge everything", d:[
+        s("Camera batteries, RS 5, hand unit NP-F, video tx, video rx, monitor."),
+        note("Don’t start any firmware update on a low battery.")
+      ]},
+      { id:"a3", t:"Activate / update the RS 5", d:[
+        s("Hold the power button to turn it on."),
+        s("Phone: turn on Bluetooth, open the DJI Ronin app, log in."),
+        p("Tap RS 5 › enter 12345678 › Activate"),
+        s("If it offers a firmware update, run it. Don’t power off or close the app while it updates.")
+      ]},
+      { id:"a4", t:"Activate / update the Focus Pro", d:[
+        s("Put the NP-F on the hand unit, hold REC to power on."),
+        p("DJI Ronin app › Hand Unit › enter 12345678 › Activate"),
+        s("Update firmware if offered. The motor updates through the hand unit once it’s linked.")
+      ]},
+      { id:"a5", t:"Update the video tx + rx", d:[
+        s("On the computer, in DJI Assistant 2."),
+        s("Use a USB-A to USB-C cable — not USB-C to USB-C."),
+        s("Update the tx and the rx one at a time."),
+        s("Check they end up on the same firmware version.")
+      ]},
+      { id:"a6", t:"Camera firmware — only if needed", d:[
+        s("In Sony Creators’ App, if it says “Update your camera”: battery 51%+, a formatted card in slot 1, follow the prompts."),
+        p("Check the version: MENU › Setup › Setup Option › Version")
+      ]}
+    ]},
+    { n:2, title:"Build the camera", items:[
+      { id:"b1", t:"Start with everything off", d:[
+        s("Camera, RS 5, hand unit, motor, tx, rx, monitor — all off. Motor unplugged.")
+      ]},
+      { id:"b2", t:"Put the lens on", d:[
+        s("Mount the lens, put in the battery and card, set the camera to movie mode.")
+      ]},
+      { id:"b3", t:"Stop autofocus fighting the motor", d:[
+        s("Cine / manual lens: nothing to do — it can’t autofocus."),
+        s("Sony AF lens with an AF·MF switch: set it to MF."),
+        p("No switch: MENU › Focus › AF/MF › Focus Mode › Manual Focus")
+      ]},
+      { id:"b4", t:"Set the camera’s HDMI out", d:[
+        p("MENU › Setup › External Output › HDMI Output Settings"),
+        kv([["Rec Media dur HDMI Output","On"],["Output Resolution","1080p"],["RAW Output","Off"]]),
+        p("Then: HDMI Info. Display › Off"),
+        s("That sends a clean image to the tx; camera info stays on the camera screen.")
+      ]},
+      { id:"b5", t:"Mount the rods + motor", d:[
+        s("Rod base on, rods in, motor on the rod."),
+        s("Mesh the motor gear fully into the lens gear — don’t jam it sideways. Tighten the clamp."),
+        s("Turn the focus ring by hand: smooth, no slip, reaches close and infinity.")
+      ]},
+      { id:"b6", t:"Mount the tx", d:[
+        s("tx on the cage, antennas up, vents clear."),
+        s("Camera HDMI out → tx HDMI IN. Tape the cable down, leave slack for the gimbal."),
+        note("tx = HDMI IN.   rx = HDMI OUT.")
+      ]}
+    ]},
+    { n:3, title:"Mount + balance the gimbal", items:[
+      { id:"c1", t:"Mount the camera on the RS 5", d:[
+        s("Gimbal off or asleep. Plate on the camera, set it on the gimbal, lock it.")
+      ]},
+      { id:"c2", t:"Cable test — by hand, gimbal off", d:[
+        s("Move it through full tilt, pan and roll."),
+        s("Fix anything that pulls a cable or fouls an arm before going on.")
+      ]},
+      { id:"c3", t:"Balance it", d:[
+        s("Tilt: balance vertical, then depth. Lock."),
+        s("Roll: balance. Lock."),
+        s("Pan: balance. Lock."),
+        note("Bad balance drains the battery and overheats the gimbal.")
+      ]},
+      { id:"c4", t:"Power on + auto-calibrate", d:[
+        s("On a stand, hold power to turn on."),
+        led([{c:"green",t:"green / grey = good"},{c:"amber",t:"yellow = slightly off"},{c:"red",t:"red = rebalance"}]),
+        s("Tap Auto Calibration, start it, don’t touch it. Still shaky after → rebalance and run it again.")
+      ]},
+      { id:"c5", t:"Set the mode", d:[
+        s("Set the follow mode to PF (Pan Follow) on the touchscreen."),
+        kv([["Speed / Sensitivity","Medium"],["Smoothness","Smooth"]]),
+        s("Leave tracking off for now.")
+      ]}
+    ]},
+    { n:4, title:"Power + link the focus", items:[
+      { id:"d1", t:"Power the motor", d:[
+        s("Motor cable into the gimbal’s motor port. Gimbal on."),
+        led([{c:"green",t:"green = linked"},{c:"red",t:"red = not linked"},{c:"amber",t:"flashing = not calibrated"}]),
+        s("Motor button: press once = switch F / I / Z.   Hold = link.   Double-press = calibrate.")
+      ]},
+      { id:"d2", t:"Power the hand unit", d:[
+        s("NP-F on, hold REC. Stand within 1 m of the motor to link.")
+      ]},
+      { id:"d3", t:"Link the hand unit to the motor", d:[
+        p("Hand unit: swipe down › Link Motor"),
+        s("Its light turns yellow (linking)."),
+        s("On the motor, press and hold the function button until it links."),
+        s("Done when both lights are solid green.")
+      ]},
+      { id:"d4", t:"Put the motor on F", d:[
+        s("Press the motor button until it shows F.   (F = focus, I = iris, Z = zoom.)")
+      ]},
+      { id:"d5", t:"Test the focus", d:[
+        s("Turn the knob — the lens ring should move."),
+        s("Motor turns but the lens doesn’t → push the gear in, tighten the clamp and lens gear, retest."),
+        p("Backwards? Swipe down › Invert Function Buttons Direction")
+      ]},
+      { id:"d6", t:"Calibrate the motor", d:[
+        p("Swipe down › Focus Motor Calibration"),
+        s("Fingers clear. Let it run to both ends, don’t touch."),
+        s("Shortcut: hold M + the trigger."),
+        s("Good = reaches both ends, no grinding or buzzing.")
+      ]},
+      { id:"d7", t:"Set the feel", d:[
+        kv([["Focus Knob Stiffness","40–60"],["Focus Motor Torque","Medium"]]),
+        s("Only go to High torque if it slips.")
+      ]}
+    ]},
+    { n:5, title:"Link the video", items:[
+      { id:"e1", t:"Power the tx", d:[
+        s("Battery on, antennas up, switch on. Check it sees the camera.")
+      ]},
+      { id:"e2", t:"Power the rx + monitor", d:[
+        s("Battery on, antennas up, switch on. Monitor on."),
+        s("rx HDMI OUT → monitor. Set the monitor input to HDMI.")
+      ]},
+      { id:"e3", t:"Link them", d:[
+        p("rx: swipe down › Connection Mode › CTRL.A"),
+        s("Then on the tx, press and hold the Link button."),
+        s("Done = picture on the monitor and signal bars.")
+      ]},
+      { id:"e4", t:"Set the channel", d:[
+        p("Swipe down › SDR Channel › AUTO"),
+        s("No AUTO? Pick a channel showing a green dot."),
+        kv([["Broadcast","Off"],["Wi-Fi","Off"]]),
+        s("Wi-Fi on only if someone needs to monitor on a phone or tablet.")
+      ]}
+    ]},
+    { n:6, title:"Confirm the chain", items:[
+      { id:"f1", t:"Camera → monitor", d:[
+        s("Everything on, picture on the monitor."),
+        p("Still showing menus? MENU › … › HDMI Info. Display › Off")
+      ]},
+      { id:"f2", t:"Focus → lens", d:[
+        s("Both focus lights green, knob moves the ring."),
+        s("Mark the ring if you want: close, centre ice, far boards.")
+      ]},
+      { id:"f3", t:"Gimbal", d:[
+        s("Operator pans, tilts and walks slowly."),
+        s("Watch for shake, vibration, cable pull, or the tx hitting an arm.")
+      ]}
+    ]},
+    { n:7, title:"Tracking", optional:true, note:"Optional. Needs the DJI RS Enhanced Intelligent Tracking Module (sold separately, clips on magnetically). No module → skip this.", items:[
+      { id:"g1", t:"Turn on ActiveTrack", d:[
+        p("Swipe right › ActiveTrack"),
+        s("Point at the subject. Trigger once = start / stop. Trigger twice = recentre."),
+        led([{c:"green",t:"green = tracking"},{c:"red",t:"red = off"}])
+      ]},
+      { id:"g2", t:"What it doesn’t do", d:[
+        s("Tracking only moves the framing. It does not pull focus."),
+        s("Focus is still all you — hand unit, motor, lens.")
+      ]}
+    ]},
+    { n:8, title:"Rehearsal", items:[
+      { id:"h1", t:"Standing still", d:[
+        s("Check the picture. Turn the knob — lens moves. Slow pan — image stays stable.")
+      ]},
+      { id:"h2", t:"Slow walk", d:[
+        s("Operator walks, you pull focus. Signal holds, motor responds, nothing shakes.")
+      ]},
+      { id:"h3", t:"On the ice", d:[
+        s("Slow skate first, you pull focus, watch the signal."),
+        s("Then shot-speed. Test tracking last.")
+      ]}
+    ]}
+  ];
+
+  var READY = { n:9, title:"Ready to roll", gate:true, items:[
+    "Camera records internally","HDMI out = 1080p","HDMI Info Display = Off",
+    "Camera HDMI → tx","tx linked to rx","rx → monitor",
+    "Gimbal balanced","Gimbal auto-calibrated","Mode = PF",
+    "Motor powered","Hand unit linked to motor","Both focus lights green",
+    "Motor on F","Motor calibrated","Knob moves the lens correctly",
+    "Tracking off for first rehearsal","Slow test passed","Skating-speed test passed","Roll"
+  ].map(function(t,i){ return { id:"r"+(i+1), t:t }; }) };
+
+  var FIXES = [
+    { id:"x1", t:"Hand unit won’t link to the motor", steps:[
+      "Power off the hand unit and gimbal, wait 10 seconds.",
+      "Power the gimbal, wait for the motor light, then power the hand unit.",
+      "Swipe down › Link Motor (light yellow), hold the motor button — both go green.",
+      "Still failing: stand within 1 m, check the motor has power and the cable is fully seated, try another cable."
+    ]},
+    { id:"x2", t:"Motor connects but the lens won’t move", steps:[
+      "Gear spins but the lens doesn’t move = bad gear mesh, or a loose lens gear or clamp.",
+      "Loosen the clamp, push the gear in, tighten the clamp and lens gear, retest."
+    ]},
+    { id:"x3", t:"Motor moves the wrong direction", steps:[
+      "Swipe down › Invert Function Buttons Direction."
+    ]},
+    { id:"x4", t:"Motor grinds at the end of the lens", steps:[
+      "Stop. Recalibrate: swipe down › Focus Motor Calibration.",
+      "Still grinds: drop torque to Medium, re-mesh the gear, check the ring isn’t jammed."
+    ]},
+    { id:"x5", t:"Motor slips on a fast pull", steps:[
+      "Raise torque from Medium to High.",
+      "Still slips: re-mesh the gear, tighten the lens gear, check the rods aren’t flexing."
+    ]},
+    { id:"x6", t:"No video on the monitor", steps:[
+      "Check in order: camera on → camera HDMI in the tx HDMI IN → tx on and seeing input.",
+      "rx on and linked → rx HDMI OUT → monitor → monitor input set to HDMI.",
+      "Camera HDMI out set to 1080p. Then swap the cable."
+    ]},
+    { id:"x7", t:"tx and rx won’t link", steps:[
+      "Power both off for 10 seconds. Power the tx, then the rx.",
+      "rx: swipe down › Connection Mode › CTRL.A.  tx: hold the Link button.",
+      "Still failing: stand within 1 m, Broadcast off, update both, check versions match."
+    ]},
+    { id:"x8", t:"Wireless cuts out on the rink", steps:[
+      "Raise the rx, keep the antennas upright.",
+      "Keep it clear of bodies, boards, metal and plexi corners.",
+      "SDR channel AUTO, Broadcast off, Wi-Fi off. Move your station closer."
+    ]},
+    { id:"x9", t:"tx overheats", steps:[
+      "Check the vents — never tape over them.",
+      "Fan Mode › Standard. Avoid Rec Low."
+    ]},
+    { id:"x10", t:"Gimbal shakes", steps:[
+      "Stop. Check no cable is pulling.",
+      "Rebalance tilt, roll and pan, then run Auto Calibration.",
+      "Still shaking: lower the stiffness / response, remove extra weight, check for loose parts."
+    ]},
+    { id:"x11", t:"Tracking grabs the wrong thing", steps:[
+      "Press the trigger to stop. Press it twice to recentre.",
+      "Frame it manually. Don’t fight the tracking mid-take."
+    ]},
+    { id:"x12", t:"Camera autofocus fights the motor", steps:[
+      "Sony lens: switch to MF. No switch: MENU › Focus › AF/MF › Focus Mode › Manual Focus.",
+      "Retest — only the knob should move focus."
+    ]}
+  ];
+
+  var ALL = SECTIONS.concat([READY]);
+  var mainIds = [];
+  SECTIONS.concat([READY]).forEach(function(sec){ if(!sec.optional){ sec.items.forEach(function(i){ mainIds.push(i.id); }); } });
+
+  // ---- state ----
+  var checked = {};
+  try { var raw = localStorage.getItem(KEY); if (raw) checked = JSON.parse(raw) || {}; } catch(e) {}
+  var openSection = 1;
+  var openFix = null;
+  var tab = "steps";
+
+  // ---- render ----
+  function detailHTML(b){
+    if (b.k === "s") return '<div class="d-line"><span class="dot"></span><span>'+b.t+'</span></div>';
+    if (b.k === "p") return '<div class="d-path">'+b.t+'</div>';
+    if (b.k === "kv") return '<div class="d-kv">'+b.items.map(function(it){ return '<div class="kv-row"><span class="kv-k">'+it[0]+'</span><span class="kv-v">'+it[1]+'</span></div>'; }).join("")+'</div>';
+    if (b.k === "led") return '<div class="d-led">'+b.items.map(function(x){ return '<span class="led-item"><span class="led-dot '+x.c+'"></span>'+x.t+'</span>'; }).join("")+'</div>';
+    if (b.k === "note") return '<div class="note">'+b.t+'</div>';
+    return "";
+  }
+  function stepHTML(it, gate){
+    var det = (!gate && it.d) ? '<div class="step-detail">'+it.d.map(detailHTML).join("")+'</div>' : '';
+    return '<div class="step'+(gate?' gate-step':'')+'" data-step="'+it.id+'"><span class="check">'+ICON.check+'</span><div class="step-main"><div class="step-title">'+it.t+'</div>'+det+'</div></div>';
+  }
+  function sectionHTML(sec){
+    var total = sec.items.length;
+    var noteH = sec.note ? '<div class="note sec-note">'+sec.note+'</div>' : '';
+    var steps = sec.items.map(function(it){ return stepHTML(it, !!sec.gate); }).join("");
+    var num = sec.gate ? ICON.flag : sec.n;
+    var opt = sec.optional ? '<span class="opt">OPTIONAL</span>' : '';
+    return '<div class="section'+(sec.gate?' gate':'')+'" data-section="'+sec.n+'">'
+      + '<div class="sec-head" data-head="'+sec.n+'">'
+      +   '<span class="badge"><span class="num">'+num+'</span><span class="bcheck">'+ICON.check+'</span></span>'
+      +   '<div class="sec-title-wrap"><span class="sec-title">'+sec.title+'</span>'+opt+'</div>'
+      +   '<span class="sec-count" data-count="'+sec.n+'">0/'+total+'</span>'
+      +   '<span class="chev">'+ICON.chev+'</span>'
+      + '</div>'
+      + '<div class="sec-body">'+noteH+steps+'</div>'
+      + '</div>';
+  }
+  function fixHTML(fx){
+    var steps = fx.steps.map(function(st,i){ return '<div class="fix-step"><span class="fix-num">'+(i+1)+'</span><span class="fix-text">'+st+'</span></div>'; }).join("");
+    return '<div class="fixcard" data-fixcard="'+fx.id+'">'
+      + '<div class="fix-head" data-fix="'+fx.id+'"><span class="fix-title">'+fx.t+'</span><span class="chev">'+ICON.chev+'</span></div>'
+      + '<div class="fix-body">'+steps+'</div>'
+      + '</div>';
+  }
+
+  function save(){ try { localStorage.setItem(KEY, JSON.stringify(checked)); } catch(e) {} }
+
+  function syncState(){
+    var steps = document.querySelectorAll("[data-step]");
+    for (var i=0; i<steps.length; i++){ steps[i].classList.toggle("done", !!checked[steps[i].getAttribute("data-step")]); }
+    ALL.forEach(function(sec){
+      var done = 0; sec.items.forEach(function(it){ if (checked[it.id]) done++; });
+      var el = document.querySelector('[data-section="'+sec.n+'"]');
+      if (!el) return;
+      el.querySelector("[data-count]").textContent = done + "/" + sec.items.length;
+      el.classList.toggle("complete", done === sec.items.length);
+      el.classList.toggle("open", openSection === sec.n);
+    });
+    var dc = 0; for (var j=0; j<mainIds.length; j++){ if (checked[mainIds[j]]) dc++; }
+    var pct = Math.round(dc / mainIds.length * 100);
+    document.getElementById("progFill").style.width = pct + "%";
+    document.getElementById("progText").textContent = dc + " of " + mainIds.length + " done";
+    var pp = document.getElementById("progPct");
+    pp.textContent = pct + "%";
+    pp.style.color = pct === 100 ? "#1f9d5b" : "#8a8d84";
+  }
+
+  function syncFix(){
+    var cards = document.querySelectorAll(".fixcard");
+    for (var i=0; i<cards.length; i++){ cards[i].classList.toggle("open", cards[i].getAttribute("data-fixcard") === openFix); }
+  }
+
+  function setTab(t){
+    tab = t;
+    document.getElementById("stepsPanel").style.display = (t === "steps") ? "block" : "none";
+    document.getElementById("fixesPanel").style.display = (t === "fixes") ? "block" : "none";
+    document.getElementById("tabSteps").classList.toggle("active", t === "steps");
+    document.getElementById("tabFixes").classList.toggle("active", t === "fixes");
+  }
+
+  // ---- init ----
+  document.getElementById("resetBtn").innerHTML = ICON.reset;
+  document.getElementById("tabSteps").innerHTML = ICON.list + "Steps";
+  document.getElementById("tabFixes").innerHTML = ICON.wrench + "Fixes";
+  document.getElementById("sectionList").innerHTML = ALL.map(sectionHTML).join("");
+  document.getElementById("fixList").innerHTML = FIXES.map(fixHTML).join("");
+  syncState();
+  setTab("steps");
+
+  // favicon
+  (function(){
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#1f9d5b"/><path d="M9 16.5l4.5 4.5L23 11" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    var l = document.createElement("link"); l.rel = "icon"; l.href = "data:image/svg+xml," + encodeURIComponent(svg);
+    document.head.appendChild(l);
+  })();
+
+  // ---- events (delegated) ----
+  document.body.addEventListener("click", function(e){
+    var el;
+    if ((el = e.target.closest("[data-tab]"))) { setTab(el.getAttribute("data-tab")); return; }
+    if (e.target.closest("#resetBtn")) { document.getElementById("confirmBar").classList.add("show"); return; }
+    if (e.target.closest("#resetYes")) { checked = {}; save(); syncState(); document.getElementById("confirmBar").classList.remove("show"); return; }
+    if (e.target.closest("#resetNo")) { document.getElementById("confirmBar").classList.remove("show"); return; }
+    if ((el = e.target.closest("[data-step]"))) { var id = el.getAttribute("data-step"); if (checked[id]) delete checked[id]; else checked[id] = true; save(); syncState(); return; }
+    if ((el = e.target.closest("[data-fix]"))) { var fid = el.getAttribute("data-fix"); openFix = (openFix === fid) ? null : fid; syncFix(); return; }
+    if ((el = e.target.closest("[data-head]"))) { var n = parseInt(el.getAttribute("data-head"), 10); openSection = (openSection === n) ? null : n; syncState(); return; }
+  });
+})();
+</script>
+</body>
+</html>
